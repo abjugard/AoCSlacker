@@ -1,4 +1,4 @@
-const { fetchNamesAndScores } = require("./endomondo.js");
+const { fetchNamesAndScores } = require("./adventofcode.js");
 const fs = require("fs");
 const _ = require("lodash");
 const { promisify } = require("util");
@@ -8,14 +8,15 @@ const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
 
 var SLACK_URL_TOKEN = process.env.SLACK_URL_TOKEN;
-var CHALLENGE_ID = process.env.CHALLENGE_ID;
+var LEADERBOARD_ID = process.env.LEADERBOARD_ID;
+var SESSION_COOKIE = process.env.SESSION_COOKIE;
 
 const formatBody = list => "```" + list.map(item => `${_.padStart(item.position, 2)}: ${item.name} - ${item.score} - ${item.change}`).join("\n") + "```";
 
 const fileName = __dirname + "/last.json";
 console.log(fileName);
 
-fetchNamesAndScores(CHALLENGE_ID).then(namesAndScores => {
+fetchNamesAndScores(LEADERBOARD_ID, SESSION_COOKIE).then(namesAndScores => {
   console.log(namesAndScores)
 
   const list = namesAndScores.map(
@@ -32,9 +33,8 @@ fetchNamesAndScores(CHALLENGE_ID).then(namesAndScores => {
 
         const payload = {
           text: formatBody(comparedList),
-          username: "Endomondo",
-          icon_url:
-            "https://www.endomondo.com/assets/view/layout/header/assets/ua-header@2x.3ae9f356a186d4064e9a3ee956293bb3.png"
+          username: "Advent of Code",
+          icon_url: "https://adventofcode.com/favicon.png"
         };
 
         const options = {
@@ -42,8 +42,9 @@ fetchNamesAndScores(CHALLENGE_ID).then(namesAndScores => {
           body: JSON.stringify(payload)
         };
 
+        console.log(options.body)
         writeFile(fileName, JSON.stringify(comparedList)).then(() => {
-          request.post(options);
+          //request.post(options);
         });
       }
     });
@@ -51,9 +52,6 @@ fetchNamesAndScores(CHALLENGE_ID).then(namesAndScores => {
 
 toComparedList = (list, last) => {
   return list.map(p => {
-    if (p.name === '(no name provided)') {
-      return { ...p, change: '-' };
-    }
     const currPos = p.position;
     const lastEntryOfPerson = last.find(item => item.name === p.name);
     if (lastEntryOfPerson) {
