@@ -7,7 +7,7 @@ const fetchNamesAndScores = (leaderBoardId, sessionCookie) =>
       reject("No leaderBoardId provided");
     }
 
-    const url = "https://adventofcode.com/2018/leaderboard/private/view/" + leaderBoardId + ".json";
+    const url = "https://adventofcode.com/2019/leaderboard/private/view/" + leaderBoardId + ".json";
 
     request({ url, headers: { Cookie: `session=${sessionCookie}` } }, function (error, response, body) {
       if (error) {

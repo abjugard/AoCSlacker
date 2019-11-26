@@ -44,7 +44,7 @@ fetchNamesAndScores(LEADERBOARD_ID, SESSION_COOKIE).then(namesAndScores => {
 
         console.log(options.body)
         writeFile(fileName, JSON.stringify(comparedList)).then(() => {
-          //request.post(options);
+          request.post(options);
         });
       }
     });
