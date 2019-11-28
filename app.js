@@ -19,9 +19,13 @@ console.log(fileName);
 fetchNamesAndScores(LEADERBOARD_ID, SESSION_COOKIE).then(namesAndScores => {
   console.log(namesAndScores)
 
-  const list = namesAndScores.map(
+  const totalList = namesAndScores.map(
     ([name, score], index) => ({ name, score, position: index + 1 })
   )
+
+  const list = totalList.slice(0, 25)
+
+  const url = "https://adventofcode.com/2019/leaderboard/private/view/" + LEADERBOARD_ID;
 
   readFile(fileName, "utf8")
     .catch(() => "[]")
@@ -32,7 +36,7 @@ fetchNamesAndScores(LEADERBOARD_ID, SESSION_COOKIE).then(namesAndScores => {
         const comparedList = toComparedList(list, last)
 
         const payload = {
-          text: formatBody(comparedList),
+          text: `${url}\n` + formatBody(comparedList),
           username: "Advent of Code",
           icon_url: "https://adventofcode.com/favicon.png"
         };
