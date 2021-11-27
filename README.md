@@ -2,12 +2,29 @@
 
 Notify slack channel with advent of code leaderboard
 
+## Crontab
 Crontab syntax to run every Monday at 12:00
 
 ```bash
 # m h  dom mon dow   command
 0 12 * * 1 SESSION_COOKIE='xyz' LEADERBOARD_ID='xxxxx' SLACK_URL_TOKEN='https://hooks.slack.com/services/xxx/xxx/xxx' YEAR='xxxx' /usr/bin/node /home/aoc-slacker/app.js
 ```
+
+## systemd
+Copy and modify `AoCSlacker.service.example` to `AoCSlacker.service` and
+hardlink it to your systemd unit library. Copy and modify
+`AoCSlacker.timer.example` to `AoCSlacker.timer` and hardlink it to your
+systemd unit library. Run `systemctl edit AoCSlacker.service` and insert:
+
+```
+[Service]
+Environment="YEAR=<AoC contest year>"
+Environment="SLACK_URL_TOKEN=<Slack webhook URL>"
+Environment="LEADERBOARD_ID=<leaderboard ID>"
+Environment="SESSION_COOKIE=<AoC session cookie>"
+```
+
+Finally run `systemctl enable --now AoCSlacker.timer`
 
 ## Example output
 
@@ -72,7 +89,4 @@ Time       | ★ | Pos | Name
 21:31:05   | 2 |  10 | Person
 12:31:41+3 | 1 |  12 | Person
 12:32:19+3 | 2 |  11 | Person
-11:19:29   | 1 |  13 | Person
-11:20:31   | 2 |  12 | Person
-15:56:23   | 1 |  14 | Person
 ```
