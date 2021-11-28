@@ -3,3 +3,6 @@ public/components
 .sass-cache
 secrets.json
 last.txt
+last.json
+**/*.service
+**/*.timer

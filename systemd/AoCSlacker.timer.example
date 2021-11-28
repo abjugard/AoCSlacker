@@ -1,0 +1,10 @@
+[Unit]
+Description=AoCSlacker timer
+
+[Timer]
+OnCalendar=*-12-1..25 10:00:00
+OnCalendar=*-12-1..25 20:00:00
+Unit=AoCSlacker.service
+
+[Install]
+WantedBy=timers.target

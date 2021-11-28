@@ -1,0 +1,16 @@
+[Unit]
+Description=AoCSlacker
+After=network-online.target
+
+[Service]
+User=lowprivuser
+Group=lowprivuser
+Type=oneshot
+ExecStart=/usr/bin/node /path/to/AoCSlacker/app.js
+TimeoutStartSec=120s
+TimeoutStopSec=120s
+KillMode=process
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target
