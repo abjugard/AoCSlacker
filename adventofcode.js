@@ -1,7 +1,7 @@
 const request = require("request");
 const _ = require("lodash");
 
-const fetchNamesAndScores = (leaderBoardId, sessionCookie, year) =>
+export const fetchNamesAndScores = (leaderBoardId, sessionCookie, year) =>
   new Promise((resolve, reject) => {
     if (!leaderBoardId) {
       reject("No leaderBoardId provided");
@@ -14,37 +14,39 @@ const fetchNamesAndScores = (leaderBoardId, sessionCookie, year) =>
         return reject(error);
       }
 
-      const rawLeadboard = JSON.parse(body)
-      const memberMap = rawLeadboard.members;
-      const members = Object.values(memberMap)
-      const names = members.map(o => {
-        if (o.name) {
-          return o.name
-        } else {
-          return o.id
-        }
-      })
-      const maxNameLength = _.maxBy(names, n => n.length);
+      const rawLeadboard = JSON.parse(body);
+
+      const members = Object.values(rawLeadboard.members);
+      const paddedNames = getPaddedNamesFromMembers(members);
+      const paddedScores = getPaddedScoresFromMembers(members);
       // Pad names so scores right align
-      const paddedNames = names.map(name => _.padEnd(name, maxNameLength));
-      const scores = members.map(m => m.local_score)
-      const maxScoreLength = _.maxBy(scores, s => String(s).length).length;
 
-      const paddedScores = scores.map(score =>
-        _.padStart(score, maxScoreLength)
-      );
-
-
-      entries = _.zip(paddedNames, paddedScores)
-      const sortedEntries = _.sortBy(entries, e => -e[1])
+      const entries = _.zip(paddedNames, paddedScores);
+      const sortedEntries = _.sortBy(entries, e => -e[1]);
 
       resolve({sortedEntries, leaderboard: rawLeadboard});
     });
   });
 
-exports.fetchNamesAndScores = fetchNamesAndScores;
+const getPaddedNamesFromMembers = (members) => {
+  const names = members.map(o => o.name ?? o.id);
+  const maxNameLength = _.maxBy(names, n => n.length);
+  const paddedNames = names.map(name =>
+    _.padEnd(name, maxNameLength)
+  );
+  return paddedNames;
+}
 
-const dayLeaderboard = (leaderboard) => {
+const getPaddedScoresFromMembers = (members) => {
+  const scores = members.map(m => m.local_score);
+  const maxScoreLength = _.maxBy(scores, s => String(s).length).length;
+  const paddedScores = scores.map(score =>
+    _.padStart(score, maxScoreLength)
+  );
+  return scores;
+}
+
+export const dayLeaderboard = (leaderboard) => {
   const positions = {
     1: 1,
     2: 1,
@@ -106,5 +108,3 @@ const formattedTime = (date) => {
 
 const formatEntry = ({time, starIdx, name}, position) =>
   `${time} | ${starIdx} | ${position} | ${name}`;
-
-exports.dayLeaderboard = dayLeaderboard;
