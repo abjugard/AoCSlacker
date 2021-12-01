@@ -1,5 +1,6 @@
 const request = require("request");
 const _ = require("lodash");
+const maxMessageLength = 2994;
 
 export const fetchNamesAndScores = (leaderBoardId, sessionCookie, year) =>
   new Promise((resolve, reject) => {
@@ -79,7 +80,7 @@ export const dayLeaderboard = (leaderboard) => {
       const last = acc[acc.length - 1];
       const entry = '\n' + raw_entry;
 
-      if ((last + entry).length > 2994) {
+      if ((last + entry).length > maxMessageLength) {
         acc.push(header + entry);
       } else {
         acc.splice(acc.length - 1, 1, last + entry);
