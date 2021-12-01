@@ -2,7 +2,7 @@ const request = require("request");
 const _ = require("lodash");
 const maxMessageLength = 2994;
 
-export const fetchNamesAndScores = (leaderBoardId, sessionCookie, year) =>
+const fetchNamesAndScores = (leaderBoardId, sessionCookie, year) =>
   new Promise((resolve, reject) => {
     if (!leaderBoardId) {
       reject("No leaderBoardId provided");
@@ -46,8 +46,9 @@ const getPaddedScoresFromMembers = (members) => {
   );
   return scores;
 }
+exports.fetchNamesAndScores = fetchNamesAndScores;
 
-export const dayLeaderboard = (leaderboard) => {
+const dayLeaderboard = (leaderboard) => {
   const positions = {
     1: 1,
     2: 1,
@@ -90,6 +91,8 @@ export const dayLeaderboard = (leaderboard) => {
     }, [header])
     .map(message => '```' + message + '```');
 }
+
+exports.dayLeaderboard = dayLeaderboard;
 
 const mapData = (starIdx, star, name, challengeDay) => {
   const date = new Date(+star.get_star_ts * 1000);
