@@ -67,7 +67,7 @@ fetchNamesAndScores(LEADERBOARD_ID, SESSION_COOKIE, YEAR).then(({sortedEntries: 
         writeFile(fileName, JSON.stringify(comparedList)).then(() => {
           request.post(optionsTotal, undefined, () => {
             dailyOptions.forEach(options => request.post(options));
-          })
+          });
         });
       }
     });
