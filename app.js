@@ -23,17 +23,13 @@ const longestName = list => {
 }
 
 const fileName = __dirname + "/last.json";
-console.log(fileName);
 
 fetchNamesAndScores(LEADERBOARD_ID, SESSION_COOKIE, YEAR).then(({sortedEntries: namesAndScores, leaderboard}) => {
-  console.log("namesAndScores:", namesAndScores)
-  // console.log("Leaderboard:", leaderboard)
-
   const totalList = namesAndScores.map(
     ([name, score], index) => ({name, score, position: index + 1})
   )
 
-  const list = totalList.slice(0, 25)
+  const list = totalList.slice(0, 25);
 
   const leaderboardUrl = `https://adventofcode.com/${YEAR}/leaderboard/private/view/${LEADERBOARD_ID}`;
 
@@ -56,21 +52,21 @@ fetchNamesAndScores(LEADERBOARD_ID, SESSION_COOKIE, YEAR).then(({sortedEntries: 
           body: JSON.stringify(payloadTotalLeaderboard)
         };
 
-        const payloadDailyLeaderboard = {
-          text: dayLeaderboard(leaderboard),
-          username: "Advent of Code - Daily",
-          icon_url: "https://adventofcode.com/favicon.png"
-        };
+        const dailyMessages = dayLeaderboard(leaderboard);
 
-        const optionsDaily = {
-          url: SLACK_URL_TOKEN,
-          body: JSON.stringify(payloadDailyLeaderboard)
-        };
+        const dailyOptions = dailyMessages
+          .map((message) => ({
+            url: SLACK_URL_TOKEN,
+            body: JSON.stringify({
+              text: message,
+              username: "Advent of Code - Daily",
+              icon_url: "https://adventofcode.com/favicon.png"
+            })
+          }));
 
-        console.log(optionsTotal.body)
         writeFile(fileName, JSON.stringify(comparedList)).then(() => {
           request.post(optionsTotal, undefined, () => {
-            request.post(optionsDaily);
+            dailyOptions.forEach(options => request.post(options));
           })
         });
       }

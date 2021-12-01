@@ -64,17 +64,28 @@ const dayLeaderboard = (leaderboard) => {
       const position = ("   " + positions[data.starIdx]).slice(-3);
       positions[data.starIdx] += 1;
       return formatEntry(data, position);
-    })
-    .join("\n");
-  let output = "";
-  if (entries) {
-    output += "```";
-    output += `Leaderboard day ${day}: Solve Times\nTime       | ★ | Pos | Name\n`;
-    output += `-----------------------------------\n`;
-    output += entries;
-    output += "```";
-  }
-  return output;
+    });
+
+  const header = [
+    `Leaderboard day ${day}: Solve Times`,
+    'Time       | ★ | Pos | Name',
+    '-----------------------------------'
+  ].join('\n');
+
+  return entries
+    .reduce((acc, raw_entry) => {
+      const last = acc[acc.length - 1];
+      const entry = '\n' + raw_entry;
+
+      if ((last + entry).length > 2994) {
+        acc.push(header + entry);
+      } else {
+        acc.splice(acc.length - 1, 1, last + entry);
+      }
+
+      return acc;
+    }, [header])
+    .map(message => '```' + message + '```');
 }
 
 const mapData = (starIdx, star, name, challengeDay) => {
