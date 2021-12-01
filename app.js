@@ -38,12 +38,12 @@ fetchNamesAndScores(LEADERBOARD_ID, SESSION_COOKIE, YEAR).then(({sortedEntries: 
     .then(JSON.parse)
     .then(previousLeaderboard => {
       if (!_.isEqual(previousLeaderboard, list)) {
-        updateLeaderboard(list, previousLeaderboard, leaderboard);
+        updateLeaderboard(leaderboardUrl, list, previousLeaderboard, leaderboard);
       }
     });
 });
 
-const updateLeaderboard = (list, previousLeaderboard, leaderboard) => {
+const updateLeaderboard = (leaderboardUrl, list, previousLeaderboard, leaderboard) => {
   const comparedList = toComparedList(list, previousLeaderboard)
 
   const payloadTotalLeaderboard = {
