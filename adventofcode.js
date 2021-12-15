@@ -19,10 +19,11 @@ const fetchNamesAndScores = (leaderBoardId, sessionCookie, year) =>
 
       const members = Object.values(rawLeadboard.members);
       const paddedNames = getPaddedNamesFromMembers(members);
-      const paddedScores = getPaddedScoresFromMembers(members);
+      const paddedScores = getPaddedScoresFromMembers(members, "local_score");
+      const paddedGlobalScores = getPaddedScoresFromMembers(members, "global_score");
       // Pad names so scores right align
 
-      const entries = _.zip(paddedNames, paddedScores);
+      const entries = _.zip(paddedNames, paddedScores, paddedGlobalScores);
       const sortedEntries = _.sortBy(entries, e => -e[1]);
 
       resolve({sortedEntries, leaderboard: rawLeadboard});
@@ -38,8 +39,8 @@ const getPaddedNamesFromMembers = (members) => {
   return paddedNames;
 }
 
-const getPaddedScoresFromMembers = (members) => {
-  const scores = members.map(m => m.local_score);
+const getPaddedScoresFromMembers = (members, scoreProperty) => {
+  const scores = members.map(m => m[scoreProperty]);
   const maxScoreLength = _.maxBy(scores, s => String(s).length).length;
   const paddedScores = scores.map(score =>
     _.padStart(score, maxScoreLength)
