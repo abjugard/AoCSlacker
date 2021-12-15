@@ -15,9 +15,9 @@ var YEAR = process.env.YEAR;
 
 const formatBody = (list, namePadding) => `\`\`\`
 Leaderboard ${YEAR}: Top 25
-Pos | ${_.padEnd("Name", namePadding)} | Score | Change
-------------------------------------------
-${list.map(item => `${_.padStart(item.position, 3)} | ${_.padEnd(item.name, namePadding)} | ${_.padStart(item.score, 5)} | ${item.change}`).join("\n")}\`\`\``;
+Pos | ${_.padEnd("Name", namePadding)} | Score | Change | Global Score
+------${_.padEnd("", namePadding,"-")}---------------------------------
+${list.map(item => `${_.padStart(item.position, 3)} | ${_.padEnd(item.name, namePadding)} | ${_.padStart(item.score, 5)} | ${_.padEnd(item.change, 6)} | ${_.padStart(item.globalScore, 12)}`).join("\n")}\`\`\``;
 
 const longestName = list => {
   return _.maxBy(list, item => item.name.length).name.length;
@@ -26,7 +26,7 @@ const longestName = list => {
 
 fetchNamesAndScores(LEADERBOARD_ID, SESSION_COOKIE, YEAR).then(({sortedEntries: namesAndScores, leaderboard}) => {
   const totalList = namesAndScores.map(
-    ([name, score], index) => ({name, score, position: index + 1})
+    ([name, score, globalScore], index) => ({name, score, position: index + 1, globalScore})
   )
 
   const list = totalList.slice(0, 25);
