@@ -8,21 +8,45 @@ const fileName = __dirname + "/last.json";
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
 
-var SLACK_URL_TOKEN = process.env.SLACK_URL_TOKEN;
-var LEADERBOARD_ID = process.env.LEADERBOARD_ID;
-var SESSION_COOKIE = process.env.SESSION_COOKIE;
-var YEAR = process.env.YEAR;
+const SLACK_URL_TOKEN = process.env.SLACK_URL_TOKEN;
+const LEADERBOARD_ID = process.env.LEADERBOARD_ID;
+const SESSION_COOKIE = process.env.SESSION_COOKIE;
+const YEAR = process.env.YEAR;
 
-const formatBody = (list, namePadding, globalPadding) => `\`\`\`
-Leaderboard ${YEAR}: Top 25
-Pos   ${_.padEnd("Name", namePadding)} Score ${_.padEnd("🌐", globalPadding)}
-------${ _.repeat("-", namePadding)  }-------${_.repeat("-", globalPadding) }
-${list.map(item => `${_.padStart(item.position, 3)} ${item.change} ${_.padEnd(item.name, namePadding)} ${_.padStart(item.score, 5)} ${_.padStart(item.globalScore === 0 ? "-" : item.globalScore, globalPadding)}`).join("\n")}\`\`\``;
+const columnDefinitions = [
+  { prop: 'position', label: 'Pos', padder: _.padStart },
+  { prop: 'change' },
+  { prop: 'name', label: 'Name' },
+  { prop: 'score', label: 'Score', padder: _.padStart },
+  { prop: 'globalScore', label: '🌐', padder: _.padStart }
+].map(c => ({ ...c, padder: (c.padder ?? _.padEnd)}));
 
-const longestProperty = (list, prop) => {
-  return _.max(list.map(item => item[prop].toString().length));
+const formatHeader = cols => {
+  const legend = cols
+    .map(c => _.padEnd(c.label, c.width))
+    .join(' ');
+  const separator = Array(legend.length).join('━');
+  return [`Leaderboard ${YEAR}: Top 25`, legend, separator].join('\n');
 }
 
+const formatBody = (cols, list) => {
+  return list
+    .map(entry => cols
+      .map(c => c.padder(entry[c.prop], c.width))
+      .join(' ')
+    ).join('\n');
+}
+
+const formatLeaderboard = list => {
+  const columns = columnDefinitions
+    .map(c => ({ ...c, width: _.max([c.label?.length ?? 0, longestProp(list, c.prop)]) }));
+  const header = formatHeader(columns);
+  const body = formatBody(columns, list);
+
+  return ["```", header, body, "```"].join('\n');
+}
+
+const longestProp = (list, prop) => _.max(list.map(item => item[prop].toString().length));
 
 fetchNamesAndScores(LEADERBOARD_ID, SESSION_COOKIE, YEAR).then(({sortedEntries: namesAndScores, leaderboard}) => {
   const totalList = namesAndScores.map(
@@ -44,10 +68,10 @@ fetchNamesAndScores(LEADERBOARD_ID, SESSION_COOKIE, YEAR).then(({sortedEntries: 
 });
 
 const updateLeaderboard = (leaderboardUrl, list, previousLeaderboard, leaderboard) => {
-  const comparedList = toComparedList(list, previousLeaderboard)
+  const comparedList = toComparedList(list, previousLeaderboard);
 
   const payloadTotalLeaderboard = {
-    text: `${leaderboardUrl}\n` + formatBody(comparedList, Math.max(longestProperty(comparedList, "name"), 4), Math.max(longestProperty(comparedList, "globalScore"), 2)),
+    text: `${leaderboardUrl}\n` + formatLeaderboard(comparedList),
     username: "Advent of Code - Total",
     icon_url: "https://adventofcode.com/favicon.png"
   };
@@ -87,7 +111,7 @@ toComparedList = (list, last) => {
         return {...p, change: '↓'};
       }
     }
-    return {...p, change: ' '};
+    return {...p, change: ''};
   });
 }
 

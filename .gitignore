@@ -6,3 +6,4 @@ last.txt
 last.json
 **/*.service
 **/*.timer
+run.sh
