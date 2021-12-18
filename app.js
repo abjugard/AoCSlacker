@@ -13,14 +13,14 @@ var LEADERBOARD_ID = process.env.LEADERBOARD_ID;
 var SESSION_COOKIE = process.env.SESSION_COOKIE;
 var YEAR = process.env.YEAR;
 
-const formatBody = (list, namePadding) => `\`\`\`
+const formatBody = (list, namePadding, globalPadding) => `\`\`\`
 Leaderboard ${YEAR}: Top 25
-Pos | ${_.padEnd("Name", namePadding)} | Score | Change | Global Score
-------${_.padEnd("", namePadding,"-")}---------------------------------
-${list.map(item => `${_.padStart(item.position, 3)} | ${_.padEnd(item.name, namePadding)} | ${_.padStart(item.score, 5)} | ${_.padEnd(item.change, 6)} | ${_.padStart(item.globalScore, 12)}`).join("\n")}\`\`\``;
+Pos   ${_.padEnd("Name", namePadding)} Score ${_.padEnd("🌐", globalPadding)}
+------${ _.repeat("-", namePadding)  }-------${_.repeat("-", globalPadding) }
+${list.map(item => `${_.padStart(item.position, 3)} ${item.change} ${_.padEnd(item.name, namePadding)} ${_.padStart(item.score, 5)} ${_.padStart(item.globalScore === 0 ? "-" : item.globalScore, globalPadding)}`).join("\n")}\`\`\``;
 
-const longestName = list => {
-  return _.maxBy(list, item => item.name.length).name.length;
+const longestProperty = (list, prop) => {
+  return _.max(list.map(item => item[prop].toString().length));
 }
 
 
@@ -47,7 +47,7 @@ const updateLeaderboard = (leaderboardUrl, list, previousLeaderboard, leaderboar
   const comparedList = toComparedList(list, previousLeaderboard)
 
   const payloadTotalLeaderboard = {
-    text: `${leaderboardUrl}\n` + formatBody(comparedList, longestName(comparedList)),
+    text: `${leaderboardUrl}\n` + formatBody(comparedList, Math.max(longestProperty(comparedList, "name"), 4), Math.max(longestProperty(comparedList, "globalScore"), 2)),
     username: "Advent of Code - Total",
     icon_url: "https://adventofcode.com/favicon.png"
   };
@@ -87,7 +87,7 @@ toComparedList = (list, last) => {
         return {...p, change: '↓'};
       }
     }
-    return {...p, change: '-'};
+    return {...p, change: ' '};
   });
 }
 
