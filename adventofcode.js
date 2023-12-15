@@ -26,7 +26,7 @@ const formatLine = cols => entry => cols
   .map(c => c.noPad ? entry[c.prop] : _.padEnd(entry[c.prop], c.width))
   .join(' ┃ ');
 
-const longestProp = (list, prop) => _.max(list.map(item => item[prop].toString().length));
+const longestProp = (list, prop) => _.max(list.map(item => item[prop]?.toString().length ?? 0));
 
 const fetchNamesAndScores = (leaderBoardId, sessionCookie, year) =>
   new Promise((resolve, reject) => {
