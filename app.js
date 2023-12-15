@@ -70,10 +70,13 @@ fetchNamesAndScores(LEADERBOARD_ID, SESSION_COOKIE, YEAR).then(({sortedEntries: 
 const updateLeaderboard = (leaderboardUrl, list, previousLeaderboard, leaderboard, fileName) => {
   const comparedList = toComparedList(list, previousLeaderboard);
 
+  const lb = formatLeaderboard(comparedList);
+
   const payloadTotalLeaderboard = {
-    text: `${leaderboardUrl}\n` + formatLeaderboard(comparedList),
+    text: "Leaderboard",
     username: "Advent of Code - Total",
-    icon_url: "https://adventofcode.com/favicon.png"
+    icon_url: "https://adventofcode.com/favicon.png",
+    attachments: [{text: `${leaderboardUrl}\n` + lb}]
   };
 
   const optionsTotal = {
@@ -87,9 +90,10 @@ const updateLeaderboard = (leaderboardUrl, list, previousLeaderboard, leaderboar
     .map((text) => ({
       url: SLACK_URL_TOKEN,
       body: JSON.stringify({
-        text,
+        text: "Solve times",
         username: "Advent of Code - Daily",
-        icon_url: "https://adventofcode.com/favicon.png"
+        icon_url: "https://adventofcode.com/favicon.png",
+        attachments: [{text}]
       })
     }));
 
