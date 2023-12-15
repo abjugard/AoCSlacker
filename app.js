@@ -3,7 +3,6 @@ const fs = require("fs");
 const _ = require("lodash");
 const {promisify} = require("util");
 const request = require("request");
-const fileName = __dirname + "/last.json";
 
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
@@ -57,17 +56,18 @@ fetchNamesAndScores(LEADERBOARD_ID, SESSION_COOKIE, YEAR).then(({sortedEntries: 
 
   const leaderboardUrl = `https://adventofcode.com/${YEAR}/leaderboard/private/view/${LEADERBOARD_ID}`;
 
+  const fileName = __dirname + `/${LEADERBOARD_ID}.json`;
   readFile(fileName, "utf8")
     .catch(() => "[]")
     .then(JSON.parse)
     .then(previousLeaderboard => {
       if (!_.isEqual(previousLeaderboard, list)) {
-        updateLeaderboard(leaderboardUrl, list, previousLeaderboard, leaderboard);
+        updateLeaderboard(leaderboardUrl, list, previousLeaderboard, leaderboard, fileName);
       }
     });
 });
 
-const updateLeaderboard = (leaderboardUrl, list, previousLeaderboard, leaderboard) => {
+const updateLeaderboard = (leaderboardUrl, list, previousLeaderboard, leaderboard, fileName) => {
   const comparedList = toComparedList(list, previousLeaderboard);
 
   const payloadTotalLeaderboard = {
