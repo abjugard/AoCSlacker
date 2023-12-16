@@ -12,37 +12,47 @@ const LEADERBOARD_ID = process.env.LEADERBOARD_ID;
 const SESSION_COOKIE = process.env.SESSION_COOKIE;
 const YEAR = process.env.YEAR;
 
-const columnDefinitions = [
-  { prop: 'position', label: 'Pos', padder: _.padStart },
-  { prop: 'change' },
-  { prop: 'name', label: 'Name' },
-  { prop: 'score', label: 'Score', padder: _.padStart },
-  { prop: 'globalScore', label: '🌐', padder: _.padStart }
-].map(c => ({ ...c, padder: (c.padder ?? _.padEnd)}));
+const columnDefinitions = scoreLen =>  [
+  { prop: 'position', padder: _.padStart },
+  { prop: 'change', empty: ' ' },
+  { prop: 'name', label: 'Name', paddingOverride: scoreLen-5, maxWidth: 20 },
+  { prop: 'score', label: 'Score', width: scoreLen, padder: _.padStart },
+  { prop: 'globalScore', label: ' 🌐', padder: _.padStart }
+].map(c => ({ ...c, padder: (c.padder ?? _.padEnd), maxWidth: (c.maxWidth ?? 100)}));
 
 const formatHeader = cols => {
   const legend = cols
-    .map(c => _.padEnd(c.label, c.width))
+    .map(c => _.padEnd(c.label, c.width + (c.paddingOverride ?? 0)))
     .join(' ');
-  const separator = Array(legend.length).join('━');
-  return [`Leaderboard ${YEAR}: Top 25`, legend, separator].join('\n');
+  return {title: `Leaderboard ${YEAR}: Top 25`, legend};
 }
 
 const formatBody = (cols, list) => {
+  const trimmedValue = (value, maxWidth) => {
+    const origValue = String(value);
+    if (origValue.length > maxWidth) {
+      return origValue.substring(0, maxWidth - 1) + '…';
+    }
+    return origValue;
+  };
   return list
     .map(entry => cols
-      .map(c => c.padder(entry[c.prop], c.width))
+      .map(c => c.padder(trimmedValue(entry[c.prop] || c.empty || '-', c.maxWidth), c.width))
       .join(' ')
-    ).join('\n');
+    );
 }
 
 const formatLeaderboard = list => {
-  const columns = columnDefinitions
-    .map(c => ({ ...c, width: _.max([c.label?.length ?? 0, longestProp(list, c.prop)]) }));
-  const header = formatHeader(columns);
+  const scoreLen = longestProp(list, 'score');
+  const columns = columnDefinitions(scoreLen)
+    .filter(c => longestProp(list, c.prop))
+    .map(c => ({ ...c, width: _.max([(c.width || c.label?.length) ?? 1, Math.min(c.maxWidth, longestProp(list, c.prop))]) }));
+  const { title, legend } = formatHeader(columns);
   const body = formatBody(columns, list);
+  const separator = '━'.repeat(body[0].length);
+  const leaderboard = "```" + [legend, separator, body.join(' \n')].join('\n') + "```";
 
-  return ["```", header, body, "```"].join('\n');
+  return { title, leaderboard };
 }
 
 const longestProp = (list, prop) => _.max(list.map(item => item[prop].toString().length));
@@ -70,13 +80,13 @@ fetchNamesAndScores(LEADERBOARD_ID, SESSION_COOKIE, YEAR).then(({sortedEntries: 
 const updateLeaderboard = (leaderboardUrl, list, previousLeaderboard, leaderboard, fileName) => {
   const comparedList = toComparedList(list, previousLeaderboard);
 
-  const lb = formatLeaderboard(comparedList);
+  const total = formatLeaderboard(comparedList);
 
   const payloadTotalLeaderboard = {
-    text: "Leaderboard",
+    text: total.title + ' - ' + leaderboardUrl,
     username: "Advent of Code - Total",
     icon_url: "https://adventofcode.com/favicon.png",
-    attachments: [{text: `${leaderboardUrl}\n` + lb}]
+    attachments: [{text: total.leaderboard}]
   };
 
   const optionsTotal = {
@@ -84,13 +94,13 @@ const updateLeaderboard = (leaderboardUrl, list, previousLeaderboard, leaderboar
     body: JSON.stringify(payloadTotalLeaderboard)
   };
 
-  const dailyMessages = dayLeaderboard(leaderboard);
+  const solves = dayLeaderboard(leaderboard);
 
-  const dailyOptions = dailyMessages
+  const dailyOptions = solves.leaderboards
     .map((text) => ({
       url: SLACK_URL_TOKEN,
       body: JSON.stringify({
-        text: "Solve times",
+        text: solves.title,
         username: "Advent of Code - Daily",
         icon_url: "https://adventofcode.com/favicon.png",
         attachments: [{text}]

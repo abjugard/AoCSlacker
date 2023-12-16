@@ -1,6 +1,6 @@
 const request = require("request");
 const _ = require("lodash");
-const maxMessageLength = 2994;
+const maxMessageLength = 2900;
 
 const positionCounter = {
   1: 1,
@@ -10,16 +10,16 @@ const positionCounter = {
 const columnDefinitions = [
   { prop: 'time', label: 'Time' },
   { prop: 'starIdx', label: '*' },
-  { prop: 'position', label: 'Pos' },
+  { prop: 'position', label: '#' },
   { prop: 'name', label: 'Name', noPad: true}
 ]
 
-const formatHeader = (cols, day) => {
+const formatHeader = (cols) => {
   const legend = cols
     .map(c => _.padEnd(c.label, c.width))
     .join(' ┃ ');
-  const separator = Array(legend.length).join('━');
-  return [`Leaderboard day ${day}: Solve Times`, legend.trim(), separator].join('\n');
+  const separator = Array(legend.length + 1).join('━');
+  return [legend.trim(), separator].join(' \n');
 }
 
 const formatLine = cols => entry => cols
@@ -44,7 +44,7 @@ const fetchNamesAndScores = (leaderBoardId, sessionCookie, year) =>
       const rawLeadboard = JSON.parse(body);
 
       const members = Object.values(rawLeadboard.members);
-      const entries = members.map(m => ([m.name ?? m.id, m.local_score, m.global_score || '-']));
+      const entries = members.map(m => ([m.name ?? m.id, m.local_score, m.global_score || '']));
       const sortedEntries = _.sortBy(entries, e => -e[1]);
 
       resolve({sortedEntries, leaderboard: rawLeadboard});
@@ -54,7 +54,9 @@ const fetchNamesAndScores = (leaderBoardId, sessionCookie, year) =>
 exports.fetchNamesAndScores = fetchNamesAndScores;
 
 const dayLeaderboard = (leaderboard) => {
-  var day = new Date().getDate();
+  const today = new Date();
+  const day = today.getDate();
+  const year = today.getFullYear();
   /* Credit to https://github.com/lindskogen/ for "magic script" */
   const rawData = Object.values(leaderboard.members)
     .filter((member) => member.completion_day_level[day] != null)
@@ -68,9 +70,10 @@ const dayLeaderboard = (leaderboard) => {
 
   const columns = columnDefinitions
     .map(c => ({ ...c, width: _.max([c.label.length, longestProp(rawData, c.prop)]) }));
+  const title = `Leaderboard ${year}: Day ${day} solve times`;
   const header = formatHeader(columns, day);
 
-  return rawData
+  const leaderboards =  rawData
     .map(formatLine(columns))
     .reduce((acc, line) => {
       const last = acc[acc.length - 1];
@@ -85,6 +88,7 @@ const dayLeaderboard = (leaderboard) => {
       return acc;
     }, [header])
     .map(message => '```' + message + '```');
+  return {title, leaderboards};
 }
 
 exports.dayLeaderboard = dayLeaderboard;
