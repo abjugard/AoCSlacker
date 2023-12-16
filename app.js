@@ -2,7 +2,7 @@ const {fetchNamesAndScores, dayLeaderboard} = require("./adventofcode.js");
 const fs = require("fs");
 const _ = require("lodash");
 const {promisify} = require("util");
-const request = require("request");
+const axios = require("axios");
 
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
@@ -11,6 +11,7 @@ const SLACK_URL_TOKEN = process.env.SLACK_URL_TOKEN;
 const LEADERBOARD_ID = process.env.LEADERBOARD_ID;
 const SESSION_COOKIE = process.env.SESSION_COOKIE;
 const YEAR = process.env.YEAR;
+const DEBUG = (process.env.DEBUG ?? false) == '1';
 
 const columnDefinitions = scoreLen =>  [
   { prop: 'position', padder: _.padStart },
@@ -83,35 +84,39 @@ const updateLeaderboard = (leaderboardUrl, list, previousLeaderboard, leaderboar
   const total = formatLeaderboard(comparedList);
 
   const payloadTotalLeaderboard = {
+    username: "Advent of Code - Top 25",
     text: total.title + ' - ' + leaderboardUrl,
-    username: "Advent of Code - Total",
     icon_url: "https://adventofcode.com/favicon.png",
     attachments: [{text: total.leaderboard}]
   };
 
-  const optionsTotal = {
-    url: SLACK_URL_TOKEN,
-    body: JSON.stringify(payloadTotalLeaderboard)
-  };
-
   const solves = dayLeaderboard(leaderboard);
 
-  const dailyOptions = solves.leaderboards
+  const solvePayloads = solves.leaderboards
     .map((text) => ({
-      url: SLACK_URL_TOKEN,
-      body: JSON.stringify({
-        text: solves.title,
-        username: "Advent of Code - Daily",
-        icon_url: "https://adventofcode.com/favicon.png",
-        attachments: [{text}]
-      })
+      username: "Advent of Code - Solve times",
+      text: solves.title,
+      icon_url: "https://adventofcode.com/favicon.png",
+      attachments: [{text}]
     }));
 
-  writeFile(fileName, JSON.stringify(comparedList)).then(() => {
-    request.post(optionsTotal, undefined, () => {
-      dailyOptions.forEach(options => request.post(options));
-    });
-  });
+  if (DEBUG) {
+    console.log(total.title);
+    console.log(total.leaderboard);
+
+    console.log(solves.title);
+    for (board of solves.leaderboards) {
+      console.log(board);
+    }
+    writeFile(fileName, JSON.stringify(comparedList));
+  } else {
+    writeFile(fileName, JSON.stringify(comparedList))
+      .then(() => {
+        axios.post(SLACK_URL_TOKEN, payloadTotalLeaderboard).then(_ => {
+          solvePayloads.forEach(payload => axios.post(SLACK_URL_TOKEN, payload))
+        });
+      });
+  }
 }
 
 toComparedList = (list, last) => {

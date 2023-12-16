@@ -1,4 +1,4 @@
-const request = require("request");
+const axios = require("axios");
 const _ = require("lodash");
 const maxMessageLength = 2900;
 
@@ -35,19 +35,16 @@ const fetchNamesAndScores = (leaderBoardId, sessionCookie, year) =>
     }
 
     const url = `https://adventofcode.com/${year}/leaderboard/private/view/${leaderBoardId}.json`;
-
-    request({url, headers: {Cookie: `session=${sessionCookie}`}}, function (error, response, body) {
-      if (error) {
-        return reject(error);
-      }
-
-      const rawLeadboard = JSON.parse(body);
-
-      const members = Object.values(rawLeadboard.members);
+    axios({
+      url,
+      method: 'get',
+      headers: {Cookie: `session=${sessionCookie}`}
+    }).then(({ data }) => {
+      const members = Object.values(data.members);
       const entries = members.map(m => ([m.name ?? m.id, m.local_score, m.global_score || '']));
       const sortedEntries = _.sortBy(entries, e => -e[1]);
 
-      resolve({sortedEntries, leaderboard: rawLeadboard});
+      resolve({sortedEntries, leaderboard: data});
     });
   });
 
