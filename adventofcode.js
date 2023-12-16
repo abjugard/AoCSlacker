@@ -11,15 +11,15 @@ const columnDefinitions = [
   { prop: 'time', label: 'Time' },
   { prop: 'name', label: 'Name', maxWidth: 16},
   // { prop: 'starIdx', label: '*' },
-  { prop: 'position', label: '#' }
-]
+  { prop: 'position', label: ' 🏆', padder: _.padStart }
+].map(c => ({ ...c, padder: (c.padder ?? _.padEnd), maxWidth: (c.maxWidth ?? 100)}))
 
 const formatHeader = (cols) => {
   const legend = cols
     .map(c => _.padEnd(c.label, c.width))
     .join(' ');
-  const separator = Array(legend.length + 1).join('━');
-  return [legend.trim(), separator].join(' \n');
+  const separator = Array(legend.length).join('━');
+  return [legend.trim(), separator].join('  \n');
 }
 
 const trimmedValue = (value, maxWidth) => {
@@ -31,7 +31,7 @@ const trimmedValue = (value, maxWidth) => {
 };
 
 const formatLine = cols => entry => cols
-  .map(c => _.padEnd(trimmedValue(entry[c.prop], c.maxWidth ?? 100), c.width))
+  .map(c => c.padder(trimmedValue(entry[c.prop], c.maxWidth), c.width))
   .join(' ');
 
 const longestProp = (list, prop) => _.max(list.map(item => item[prop]?.toString().length ?? 0));
@@ -74,7 +74,7 @@ const dayLeaderboard = (leaderboard) => {
     .map(mapPosition);
 
   const columns = columnDefinitions
-    .map(c => ({ ...c, width: _.max([c.label.length, Math.min(longestProp(rawData, c.prop), c.maxWidth ?? 100)]) }));
+    .map(c => ({ ...c, width: _.max([c.label.length, Math.min(longestProp(rawData, c.prop), c.maxWidth)]) }));
   const title = `Leaderboard ${year}: Day ${day} solve times`;
   const header = formatHeader(columns, day);
 
@@ -92,7 +92,7 @@ const dayLeaderboard = (leaderboard) => {
 
       return acc;
     }, [header])
-    .map(message => '```\n' + message + '```');
+    .map(message => '```' + message + '```');
   return {title, leaderboards};
 }
 
