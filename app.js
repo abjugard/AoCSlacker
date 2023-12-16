@@ -19,7 +19,7 @@ const columnDefinitions = list => {
   return [
     { prop: 'position', padder: _.padStart },
     { prop: 'change', empty: ' ' },
-    { prop: 'name', label: 'Name', paddingOverride: scoreLen-5, maxWidth: 19-globalScoreLen },
+    { prop: 'name', label: 'Name', paddingOverride: scoreLen-5, maxWidth: 17-globalScoreLen },
     { prop: 'score', label: 'Score', width: scoreLen, padder: _.padStart },
     { prop: 'globalScore', label: ' 🌐', padder: _.padStart }
   ].map(c => ({ ...c, padder: (c.padder ?? _.padEnd), maxWidth: (c.maxWidth ?? 100)}));
@@ -87,7 +87,7 @@ const updateLeaderboard = (leaderboardUrl, list, previousLeaderboard, leaderboar
   const total = formatLeaderboard(comparedList);
 
   const payloadTotalLeaderboard = {
-    username: "Advent of Code - Top 25",
+    username: "Advent of Code",
     text: total.title + ' - ' + leaderboardUrl,
     icon_url: "https://adventofcode.com/favicon.png",
     attachments: [{text: total.leaderboard}]
@@ -97,7 +97,7 @@ const updateLeaderboard = (leaderboardUrl, list, previousLeaderboard, leaderboar
 
   const solvePayloads = solves.leaderboards
     .map((text) => ({
-      username: "Advent of Code - Solve times",
+      username: "Advent of Code",
       text: solves.title,
       icon_url: "https://adventofcode.com/favicon.png",
       attachments: [{text}]

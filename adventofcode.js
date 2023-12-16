@@ -9,7 +9,7 @@ const positionCounter = {
 
 const columnDefinitions = [
   { prop: 'time', label: 'Time' },
-  { prop: 'name', label: 'Name', maxWidth: 16},
+  { prop: 'name', label: 'Name', maxWidth: 15 },
   // { prop: 'starIdx', label: '*' },
   { prop: 'position', label: ' 🏆', padder: _.padStart }
 ].map(c => ({ ...c, padder: (c.padder ?? _.padEnd), maxWidth: (c.maxWidth ?? 100)}))
