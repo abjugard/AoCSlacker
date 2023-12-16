@@ -13,13 +13,17 @@ const SESSION_COOKIE = process.env.SESSION_COOKIE;
 const YEAR = process.env.YEAR;
 const DEBUG = (process.env.DEBUG ?? false) == '1';
 
-const columnDefinitions = scoreLen =>  [
-  { prop: 'position', padder: _.padStart },
-  { prop: 'change', empty: ' ' },
-  { prop: 'name', label: 'Name', paddingOverride: scoreLen-5, maxWidth: 20 },
-  { prop: 'score', label: 'Score', width: scoreLen, padder: _.padStart },
-  { prop: 'globalScore', label: ' 🌐', padder: _.padStart }
-].map(c => ({ ...c, padder: (c.padder ?? _.padEnd), maxWidth: (c.maxWidth ?? 100)}));
+const columnDefinitions = list => {
+  const scoreLen = longestProp(list, 'score');
+  const globalScoreLen = longestProp(list, 'globalScore');
+  return [
+    { prop: 'position', padder: _.padStart },
+    { prop: 'change', empty: ' ' },
+    { prop: 'name', label: 'Name', paddingOverride: scoreLen-5, maxWidth: 19-globalScoreLen },
+    { prop: 'score', label: 'Score', width: scoreLen, padder: _.padStart },
+    { prop: 'globalScore', label: ' 🌐', padder: _.padStart }
+  ].map(c => ({ ...c, padder: (c.padder ?? _.padEnd), maxWidth: (c.maxWidth ?? 100)}));
+}
 
 const formatHeader = cols => {
   const legend = cols
@@ -44,8 +48,7 @@ const formatBody = (cols, list) => {
 }
 
 const formatLeaderboard = list => {
-  const scoreLen = longestProp(list, 'score');
-  const columns = columnDefinitions(scoreLen)
+  const columns = columnDefinitions(list)
     .filter(c => longestProp(list, c.prop))
     .map(c => ({ ...c, width: _.max([(c.width || c.label?.length) ?? 1, Math.min(c.maxWidth, longestProp(list, c.prop))]) }));
   const { title, legend } = formatHeader(columns);
